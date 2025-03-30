@@ -23,6 +23,26 @@ class SlackSocketModeBot
     num_of_connections.times { add_connection(callback) } if app_token
   end
 
+  def name
+    "swimmy"
+  end
+
+  def web_client
+    self
+  end
+
+  def say(options = {})
+    call("chat.postMessage", options)
+  end
+
+  def users_info(options = {})
+    to_open_struct(call("users.info", options, http_method: :get))
+  end
+
+  def name?(bot_name)
+    bot_name == name
+  end
+
   #: (String method, untyped data, ?token: String) -> untyped
   def call(method, data, token: @token, http_method: :post)
     count = 0
@@ -56,6 +76,23 @@ class SlackSocketModeBot
       count += 1
       retry if count < 3
       raise
+    end
+  end
+
+  private def to_open_struct(obj)
+    case obj
+    when Hash
+      OpenStruct.new(
+        obj.transform_values do |v|
+        to_open_struct(v)
+      end
+      )
+    when Array
+      obj.map do |v|
+        to_open_struct(v)
+      end
+    else
+      obj
     end
   end
 
