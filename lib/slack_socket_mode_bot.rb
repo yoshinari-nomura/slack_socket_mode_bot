@@ -24,15 +24,29 @@ class SlackSocketModeBot
   end
 
   #: (String method, untyped data, ?token: String) -> untyped
-  def call(method, data, token: @token)
+  def call(method, data, token: @token, http_method: :post)
     count = 0
     begin
       url = URI("https://slack.com/api/" + method)
-      res = Net::HTTP.post(
-        url, JSON.generate(data),
-        "Content-type" => "application/json; charset=utf-8",
-        "Authorization" => "Bearer " + token,
-      )
+
+      if http_method == :get
+        url.query = URI.encode_www_form(data)
+
+        http = Net::HTTP.new(url.host, url.port)
+        http.use_ssl = (url.scheme == "https")
+        request = Net::HTTP::Get.new(url)
+        request["Authorization"] = "Bearer " + token
+
+        res = http.request(request)
+        puts "----------------------------------------------"
+        pp JSON.parse(res.body, symbolize_names: true)
+      else
+        res = Net::HTTP.post(
+          url, JSON.generate(data),
+          "Content-type" => "application/json; charset=utf-8",
+          "Authorization" => "Bearer " + token,
+        )
+      end
       json = JSON.parse(res.body, symbolize_names: true)
       raise Error, json[:error] unless json[:ok]
       json
