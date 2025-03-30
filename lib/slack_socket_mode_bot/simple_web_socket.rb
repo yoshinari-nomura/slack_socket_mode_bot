@@ -17,7 +17,8 @@ class SlackSocketModeBot::SimpleWebSocket
       io = TCPSocket.new(uri.host, uri.port || 443)
       @io = OpenSSL::SSL::SSLSocket.new(io, ctx)
       @io.connect
-    rescue Socket::ResolutionError
+    # rescue Socket::ResolutionError
+    rescue SocketError
       sleep 1
       count += 1
       retry if count < 3

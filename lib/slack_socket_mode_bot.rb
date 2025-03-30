@@ -50,7 +50,8 @@ class SlackSocketModeBot
       json = JSON.parse(res.body, symbolize_names: true)
       raise Error, json[:error] unless json[:ok]
       json
-    rescue Socket::ResolutionError
+    # rescue Socket::ResolutionError
+    rescue SocketError
       sleep 1
       count += 1
       retry if count < 3
