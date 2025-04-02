@@ -12,8 +12,11 @@ require_relative "slack_socket_mode_bot/simple_web_socket"
 class SlackSocketModeBot
   class Error < StandardError; end
 
+  attr_reader :name
+
   #: (token: String, ?app_token: String, ?num_of_connections: Integer, ?debug: boolean, ?logger: Logger) { (untyped) -> untyped } -> void
-  def initialize(token:, app_token: nil, num_of_connections: 4, debug: false, logger: nil, &callback)
+  def initialize(name:, token:, app_token: nil, num_of_connections: 4, debug: false, logger: nil, &callback)
+    @name = name
     @token = token
     @app_token = app_token
     @conns = []
@@ -21,10 +24,6 @@ class SlackSocketModeBot
     @logger = logger
     @events = {}
     num_of_connections.times { add_connection(callback) } if app_token
-  end
-
-  def name
-    "swimmy"
   end
 
   def web_client
