@@ -46,6 +46,7 @@ class SlackSocketModeBot::SimpleWebSocket
               yield :close unless closed
               closed = true
             when :ping
+              # FIXME: should yield for tick
               send(msg.data, type: :pong)
             when :pong
             when :text

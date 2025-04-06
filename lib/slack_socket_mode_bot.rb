@@ -12,7 +12,7 @@ require_relative "slack_socket_mode_bot/simple_web_socket"
 class SlackSocketModeBot
   class Error < StandardError; end
 
-  attr_reader :name
+  attr_reader :name, :user_id, :cannonical_name
 
   #: (token: String, ?app_token: String, ?num_of_connections: Integer, ?debug: boolean, ?logger: Logger) { (untyped) -> untyped } -> void
   def initialize(name:, token:, app_token: nil, num_of_connections: 4, debug: false, logger: nil, &callback)
@@ -23,6 +23,9 @@ class SlackSocketModeBot
     @debug = debug
     @logger = logger
     @events = {}
+    auth_info = web_client.auth_test
+    @user_id = auth_info.user_id
+    @cannonical_name = auth_info.user
     num_of_connections.times { add_connection(callback) } if app_token
   end
 
@@ -30,16 +33,30 @@ class SlackSocketModeBot
     self
   end
 
-  def say(options = {})
+  def chat_postMessage(options = {})
     call("chat.postMessage", options)
   end
+  alias_method :say, :chat_postMessage
 
   def users_info(options = {})
     to_open_struct(call("users.info", options, http_method: :get))
   end
 
+  def conversations_replies(options = {})
+    to_open_struct(call("conversations.replies", options, http_method: :get))
+  end
+
   def name?(bot_name)
     bot_name == name
+  end
+
+  # https://api.slack.com/methods/auth.test
+  # auth_info = web_client.auth_test
+  #
+  # puts "name: #{auth_info.user} id: #{auth_info.user_id}"
+  #
+  def auth_test(options = {})
+    to_open_struct(call("auth.test", options, http_method: :post))
   end
 
   #: (String method, untyped data, ?token: String) -> untyped
